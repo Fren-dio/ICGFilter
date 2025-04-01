@@ -20,15 +20,18 @@ public class ImagePanel extends JPanel implements MouseListener {
 	public BufferedImage loadedImage;
 	public BufferedImage savedLoadedImage;
 	public BufferedImage currentViewedImage;
+	public BufferedImage changedImage;
 	private SelectedSettings selectedSettings;
 	private JScrollPane scrollPane;
 	private FrameWork frameWork;
+	private boolean changingFlag;
 
 	public ImagePanel(SelectedSettings selectedSettings, MainWindowSettings mainWindowSettings, JScrollPane scrollPane, FrameWork frameWork) {
 		this.mainWindowSettings = mainWindowSettings;
 		this.selectedSettings = selectedSettings;
 		this.scrollPane = scrollPane;
 		this.frameWork = frameWork;
+		this.changingFlag = false;
 
 		loadedImage = new BufferedImage(
 				mainWindowSettings.getWeight(),
@@ -41,6 +44,11 @@ public class ImagePanel extends JPanel implements MouseListener {
 				BufferedImage.TYPE_INT_ARGB
 		);
 		currentViewedImage = new BufferedImage(
+				mainWindowSettings.getWeight(),
+				mainWindowSettings.getHeight(),
+				BufferedImage.TYPE_INT_ARGB
+		);
+		changedImage = new BufferedImage(
 				mainWindowSettings.getWeight(),
 				mainWindowSettings.getHeight(),
 				BufferedImage.TYPE_INT_ARGB
@@ -61,7 +69,7 @@ public class ImagePanel extends JPanel implements MouseListener {
 				int availableWidth = viewSize.width - 2 * BORDER_PADDING;
 				int availableHeight = viewSize.height - 2 * BORDER_PADDING - 110;
 
-				double imageRatio = (double) savedLoadedImage.getWidth() / savedLoadedImage.getHeight();
+				double imageRatio = (double) loadedImage.getWidth() / loadedImage.getHeight();
 				double panelRatio = (double) availableWidth / availableHeight;
 
 				int drawWidth, drawHeight;
@@ -74,16 +82,19 @@ public class ImagePanel extends JPanel implements MouseListener {
 					drawHeight = (int) (drawWidth / imageRatio);
 				}
 
-				// Создаем временное изображение с новыми размерами
-				BufferedImage scaledImage = new BufferedImage(drawWidth, drawHeight, BufferedImage.TYPE_INT_ARGB);
-				Graphics2D sg = scaledImage.createGraphics();
-				sg.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-						RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-				sg.drawImage(savedLoadedImage, 0, 0, drawWidth, drawHeight, null);
-				sg.dispose();
+				if (!changingFlag) {
+					BufferedImage scaledImage = new BufferedImage(drawWidth, drawHeight, BufferedImage.TYPE_INT_ARGB);
+					Graphics2D sg = scaledImage.createGraphics();
+					sg.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+							RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+					sg.drawImage(savedLoadedImage, 0, 0, drawWidth, drawHeight, null);
+					sg.dispose();
 
-				// Обновляем loadedImage
-				loadedImage = scaledImage;
+					loadedImage = scaledImage;
+				}
+				else {
+					loadedImage = changedImage;
+				}
 
 				int xPos = (availableWidth - drawWidth) / 2 + BORDER_PADDING;
 				int yPos = (availableHeight - drawHeight) / 2 + BORDER_PADDING;
@@ -94,9 +105,15 @@ public class ImagePanel extends JPanel implements MouseListener {
 				// Режим реального размера - используем savedLoadedImage
 				int xPos = BORDER_PADDING;
 				int yPos = BORDER_PADDING;
-				g2d.drawImage(savedLoadedImage, xPos, yPos, this);
+				if (!changingFlag) {
+					loadedImage = savedLoadedImage;
+				}
+				else {
+					loadedImage = changedImage;
+				}
+				g2d.drawImage(loadedImage, xPos, yPos, this);
 				drawDashedBorder(g2d, xPos, yPos,
-						savedLoadedImage.getWidth(), savedLoadedImage.getHeight());
+						loadedImage.getWidth(), loadedImage.getHeight());
 			}
 		}
 		g2d.dispose();
@@ -130,6 +147,7 @@ public class ImagePanel extends JPanel implements MouseListener {
 		updateScrollBars();
 	}
 
+
 	private void drawDashedBorder(Graphics2D g2d, int x, int y, int width, int height) {
 		g2d.setColor(Color.darkGray);
 		float[] dashPattern = {10, 5};
@@ -142,87 +160,6 @@ public class ImagePanel extends JPanel implements MouseListener {
 				0                       // Фаза пунктира
 		));
 		g2d.drawRect(x, y, width, height);
-	}
-
-	private void drawImageFitToScreen(Graphics2D g2d, int x, int y, int width, int height) {
-		// Получаем реально доступные размеры viewport
-		Dimension viewSize = scrollPane.getViewport().getExtentSize();
-		int availableWidth = viewSize.width - 2 * BORDER_PADDING;
-		int availableHeight = viewSize.height - 2 * BORDER_PADDING;
-
-		// Рассчитываем пропорции
-		double imageRatio = (double) loadedImage.getWidth() / loadedImage.getHeight();
-		double panelRatio = (double)availableWidth / availableHeight;
-
-		int drawWidth, drawHeight;
-
-		if (panelRatio > imageRatio) {
-			drawHeight = availableHeight;
-			drawWidth = (int)(drawHeight * imageRatio);
-		} else {
-			drawWidth = availableWidth;
-			drawHeight = (int)(drawWidth / imageRatio);
-		}
-
-		// Центрируем изображение
-		int xс = (availableWidth - drawWidth) / 2 + BORDER_PADDING;
-		int yс = (availableHeight - drawHeight) / 2 + BORDER_PADDING;
-
-		// Рисуем с высококачественным масштабированием
-		g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-				RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-		g2d.drawImage(loadedImage, xс, yс, drawWidth, drawHeight, this);
-	}
-	private void drawImageActualSize(Graphics2D g2d, int x, int y) {
-		g2d.drawImage(loadedImage,
-				x + BORDER_PADDING/2,
-				y + BORDER_PADDING/2,
-				loadedImage.getWidth(),
-				loadedImage.getHeight(),
-				this);
-	}
-
-	private void updateCurrentImageData() {
-		if (loadedImage == null || scrollPane == null) return;
-
-		// Создаем временное изображение с текущими размерами
-		BufferedImage scaledImage;
-		Dimension viewSize = scrollPane.getViewport().getExtentSize();
-		int width = viewSize.width - 2 * BORDER_PADDING;
-		int height = viewSize.height - 2 * BORDER_PADDING;
-
-		if (fitToScreen) {
-			// Для режима "под экран" создаем масштабированную версию
-			double imageRatio = (double) loadedImage.getWidth() / loadedImage.getHeight();
-			double panelRatio = (double)width / height;
-
-			int drawWidth, drawHeight;
-
-			if (panelRatio > imageRatio) {
-				drawHeight = height;
-				drawWidth = (int)(drawHeight * imageRatio);
-			} else {
-				drawWidth = width;
-				drawHeight = (int)(drawWidth / imageRatio);
-			}
-
-			// Создаем масштабированное изображение
-			scaledImage = new BufferedImage(drawWidth, drawHeight, BufferedImage.TYPE_INT_ARGB);
-			Graphics2D g = scaledImage.createGraphics();
-			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-					RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-			g.drawImage(loadedImage, 0, 0, drawWidth, drawHeight, null);
-			g.dispose();
-			loadedImage = scaledImage;
-		}
-
-		// Обновляем размеры панели
-		setPreferredSize(new Dimension(
-				loadedImage.getWidth() + 2 * BORDER_PADDING,
-				loadedImage.getHeight() + 2 * BORDER_PADDING
-		));
-		revalidate();
-		repaint();
 	}
 
 
@@ -252,7 +189,7 @@ public class ImagePanel extends JPanel implements MouseListener {
 	public void clear() {
 		if (loadedImage != null) {
 			Graphics2D g2d = loadedImage.createGraphics();
-			g2d.setColor(new Color(230, 230, 230));
+			g2d.setColor(getBackground());
 			g2d.fillRect(0, 0, loadedImage.getWidth(), loadedImage.getHeight());
 			g2d.dispose();
 			repaint();
@@ -292,6 +229,33 @@ public class ImagePanel extends JPanel implements MouseListener {
 		});
 	}
 
+	// C = 0.2989 * R + 0.5870 * G + 0.1140 * B
+	public void changeViewedImageToBW() {
+		changingFlag = true;
+		int height = loadedImage.getHeight();
+		int width = loadedImage.getWidth();
+		changedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+
+		for (int i = 0; i < height; i++) {
+			for (int k = 0; k < width; k++) {
+				int rgb = loadedImage.getRGB(k, i);
+				int alpha = (rgb >> 24) & 0xFF;
+				int red = (rgb >> 16) & 0xFF;
+				int green = (rgb >> 8) & 0xFF;
+				int blue = rgb & 0xFF;
+
+				int gray = (int)(0.2989 * red + 0.5870 * green + 0.1140 * blue);
+
+				int newPixel = (alpha << 24) | (gray << 16) | (gray << 8) | gray;
+				changedImage.setRGB(k, i, newPixel);
+			}
+		}
+
+		loadedImage = changedImage;
+		repaint();
+		System.out.println("Image converted to BW. Size: " + width + "x" + height);
+	}
+
 	public void saveAsImage(String filePath, String format) {
 		try {
 			ImageIO.write(loadedImage, format, new File(filePath));
@@ -305,6 +269,7 @@ public class ImagePanel extends JPanel implements MouseListener {
 	public void openImage(String filePath) {
 		try {
 			fitToScreen = false;
+			changingFlag = false;
 			loadedImage = ImageIO.read(new File(filePath));
 			savedLoadedImage = ImageIO.read(new File(filePath));
 			setPreferredSize(new Dimension(

@@ -34,11 +34,13 @@ public class ToolBarMenu extends JToolBar {
         addOpenSaveBtns();
         addResizeBtns();
 
-
         this.addSeparator();
         addOpenDefineImage();
-        addBtnChoseColor();
+        //addBtnChoseColor();
         this.addSeparator();
+        this.add(new JSeparator(SwingConstants.VERTICAL));
+
+        addRGBToBWBtn();
 
         this.add(new JSeparator(SwingConstants.VERTICAL));
 
@@ -47,12 +49,26 @@ public class ToolBarMenu extends JToolBar {
 
     }
 
+    void addRGBToBWBtn() {
+        JButton RGBToBWBtn = new JButton("To BW image");
+        RGBToBWBtn.setToolTipText("Convert loaded image to black/white format");
+        RGBToBWBtn.addActionListener(e -> convertImageFromRGBToBw());
+        RGBToBWBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        this.add(RGBToBWBtn);
+    }
+
+    void convertImageFromRGBToBw() {
+        imagePanel.changeViewedImageToBW();
+    }
+
     void addOpenSaveBtns() {
         JButton openBtn = new JButton("Open");
+        openBtn.setToolTipText("Open image");
         openBtn.addActionListener(e -> openImage());
         this.add(openBtn);
 
         JButton saveBtn = new JButton("Save");
+        saveBtn.setToolTipText("Save current image");
         saveBtn.addActionListener(e -> saveImage());
         this.add(saveBtn);
     }
@@ -81,10 +97,12 @@ public class ToolBarMenu extends JToolBar {
 
     void addResizeBtns() {
         JButton toRealSizeBtn = new JButton("To real size");
+        toRealSizeBtn.setToolTipText("Convert image to real size (pixel to pixel)");
         toRealSizeBtn.addActionListener(e -> resizeToRealSize());
         this.add(toRealSizeBtn);
 
         JButton toWindowSizeBtn = new JButton("To screen size");
+        toWindowSizeBtn.setToolTipText("Convert to current image size. Resize loaded image.");
         toWindowSizeBtn.addActionListener(e -> resizeToScreenSize());
         this.add(toWindowSizeBtn);
     }
