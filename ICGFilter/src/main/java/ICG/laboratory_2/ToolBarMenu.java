@@ -6,11 +6,9 @@ import ICG.laboratory_2.Settings.SelectedSettings;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
+import java.awt.event.*;
 import java.io.File;
+import java.util.Hashtable;
 import java.util.Objects;
 
 public class ToolBarMenu extends JToolBar {
@@ -36,29 +34,413 @@ public class ToolBarMenu extends JToolBar {
 
         this.addSeparator();
         addOpenDefineImage();
-        //addBtnChoseColor();
         this.addSeparator();
         this.add(new JSeparator(SwingConstants.VERTICAL));
 
         addRGBToBWBtn();
+        addBWToRGBBtn();
+        addInverseBtn();
+        addGausseBtn();
+        addSharpBtn();
+        addEmbossBtn();
+        addGammaBtn();
+        addChoseBordersBtn();
 
         this.add(new JSeparator(SwingConstants.VERTICAL));
 
+        JPanel setsGrid = new JPanel();
+        setsGrid.setLayout(new BoxLayout(setsGrid, BoxLayout.Y_AXIS));
+
+        JPanel row1 = new JPanel();
+        row1.setLayout(new BoxLayout(row1, BoxLayout.X_AXIS));
+
+        JLabel interpolLabel = new JLabel("Интерполяция: ", SwingConstants.CENTER);
+        interpolLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+        JToggleButton interButton = new JToggleButton("Билинейная");
+        interButton.setToolTipText("");
+        interButton.setSelected(false);
+        row1.add(interpolLabel);
+        row1.add(interButton);
+
+        JPanel row2 = new JPanel();
+        row2.setLayout(new BoxLayout(row2, BoxLayout.X_AXIS));
+
+        JLabel label = new JLabel("Работа с исходным изображением", SwingConstants.CENTER);
+        label.setFont(new Font("Arial", Font.PLAIN, 12));
+        JToggleButton toggleButton = new JToggleButton("НЕТ");
+        toggleButton.setToolTipText("ДА - фильтры применяются к изначальному изображению\nНЕТ - фильтры применяются последовательно");
+        toggleButton.setSelected(false);
+        row2.add(label);
+        row2.add(toggleButton);
+
+        toggleButton.addActionListener(e -> {
+            if (toggleButton.isSelected()) {
+                System.out.println("Состояние: Последовательное применение фильтров");
+                toggleButton.setText("ДА");
+                imagePanel.setFilterMode(true);
+            } else {
+                System.out.println("Состояние: Работа с исходным изображением");
+                toggleButton.setText("НЕТ");
+                imagePanel.setFilterMode(false);
+            }
+        });
+        setsGrid.add(row1);
+        setsGrid.add(row2);
+        add(setsGrid);
+        add(toggleButton);
         addInfoPanel();
 
 
     }
 
+    void addBWToRGBBtn() {
+        JButton BWToRGBBtn = new JButton("RGB");
+        BWToRGBBtn.setToolTipText("Look loaded image in rgb format");
+        BWToRGBBtn.addActionListener(e -> convertImageFromBwToRGB());
+        BWToRGBBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        this.add(BWToRGBBtn);
+    }
+
     void addRGBToBWBtn() {
-        JButton RGBToBWBtn = new JButton("To BW image");
+        JButton RGBToBWBtn = new JButton("BW");
         RGBToBWBtn.setToolTipText("Convert loaded image to black/white format");
         RGBToBWBtn.addActionListener(e -> convertImageFromRGBToBw());
         RGBToBWBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
         this.add(RGBToBWBtn);
     }
 
+    void addInverseBtn() {
+        JButton RGBToBWBtn = new JButton("Inverse");
+        RGBToBWBtn.setToolTipText("Convert loaded image to inverse format");
+        RGBToBWBtn.addActionListener(e -> convertImageToInverse());
+        RGBToBWBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        this.add(RGBToBWBtn);
+    }
+
+
+    void addGausseBtn() {
+        JButton GausseBtn = new JButton("Gausse");
+        GausseBtn.setToolTipText("Convert loaded image to gaussian blured format");
+        GausseBtn.addActionListener(e -> openGausseForm());
+        GausseBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        this.add(GausseBtn);
+    }
+
+    void addSharpBtn() {
+        JButton GausseBtn = new JButton("Sharp");
+        GausseBtn.setToolTipText("Convert loaded image to more sharpness format");
+        GausseBtn.addActionListener(e -> openSharpForm());
+        GausseBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        this.add(GausseBtn);
+    }
+
+    void addEmbossBtn() {
+        JButton btn = new JButton("Emboss");
+        btn.setToolTipText("Convert loaded image to emboss format");
+        btn.addActionListener(e -> convertImageToEmboss());
+        btn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        this.add(btn);
+    }
+
+    void addGammaBtn() {
+        JButton btn = new JButton("EdgeDetection");
+        btn.setToolTipText("Convert loaded image to edge detection format");
+        btn.addActionListener(e -> openEdgeDetectionForm());
+        btn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        this.add(btn);
+    }
+
+    void addChoseBordersBtn() {
+        JButton btn = new JButton("Gamma");
+        btn.setToolTipText("Convert loaded image to gamma corrected format");
+        btn.addActionListener(e -> openGammaForm());
+        btn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        this.add(btn);
+    }
+
     void convertImageFromRGBToBw() {
-        imagePanel.changeViewedImageToBW();
+        imagePanel.changeViewedImage("BW");
+    }
+    void convertImageFromBwToRGB() {
+        imagePanel.changeViewedImage("RGB");
+    }
+    void convertImageToInverse() {
+        imagePanel.changeViewedImage("INVERSE");
+    }
+    void convertImageToEmboss() {
+        imagePanel.convertPixelToEmboss();
+    }
+
+    public void openGammaForm() {
+        JFrame frame = new JFrame("Гамма-коррекция");
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setSize(400, 250); // Увеличили размер для удобства
+        frame.setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS));
+
+        JSlider gammaSlider = new JSlider(1, 100, 10); // 10 = 1.0 по умолчанию
+        Hashtable<Integer, JLabel> labelTable = new Hashtable<>();
+        for (int i = 1; i <= 100; i += 10) { // Метки каждые 1.0
+            float value = i / 10.0f;
+            labelTable.put(i, new JLabel(String.format("%.1f", value)));
+        }
+
+        gammaSlider.setLabelTable(labelTable);
+        gammaSlider.setMajorTickSpacing(10);
+        gammaSlider.setMinorTickSpacing(1);
+        gammaSlider.setPaintTicks(true);
+        gammaSlider.setPaintLabels(true);
+
+        JLabel valueLabel = new JLabel("γ = 1.0", SwingConstants.CENTER);
+        valueLabel.setFont(new Font("Arial", Font.BOLD, 14));
+
+        JTextField gammaField = new JTextField("1.0");
+        gammaField.setHorizontalAlignment(JTextField.CENTER);
+        gammaField.setMaximumSize(new Dimension(100, 25));
+
+        gammaSlider.addChangeListener(e -> {
+            double gammaValue = gammaSlider.getValue() / 10.0;
+            valueLabel.setText(String.format("γ = %.1f", gammaValue));
+            gammaField.setText(String.format("%.1f", gammaValue));
+        });
+
+        gammaField.addActionListener(e -> {
+            try {
+                double value = Double.parseDouble(gammaField.getText());
+                value = Math.max(0.1, Math.min(10.0, value));
+                gammaSlider.setValue((int)(value * 10));
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(frame, "Введите число от 0.1 до 10.0", "Ошибка", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        JButton applyButton = new JButton("Применить");
+        applyButton.addActionListener(e -> {
+            double gamma = gammaSlider.getValue() / 10.0;
+            imagePanel.convertToGamma(gamma);
+            frame.dispose();
+        });
+
+        JButton cancelButton = new JButton("Cancel");
+        cancelButton.addActionListener(e -> {
+            System.out.println("Выбор отменён (кнопка Cancel)");
+            frame.dispose();
+        });
+
+        JPanel controlPanel = new JPanel();
+        controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
+        controlPanel.add(new JLabel("Выберите параметр γ (0.1 - 10.0):"));
+        controlPanel.add(gammaSlider);
+        controlPanel.add(valueLabel);
+        controlPanel.add(new JLabel("Или введите вручную:"));
+        controlPanel.add(gammaField);
+
+        frame.add(controlPanel);
+        frame.add(Box.createVerticalStrut(10));
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(cancelButton);
+        buttonPanel.add(applyButton);
+        frame.add(buttonPanel);
+
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+
+    enum EdgeDetectionType {
+        ROBERTS, SOBEL
+    }
+
+    public void openEdgeDetectionForm() {
+        JFrame frame = new JFrame("Выделение границ");
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setSize(400, 300); // Увеличили высоту для нового элемента
+        frame.setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS));
+
+        ButtonGroup typeGroup = new ButtonGroup();
+        JRadioButton robertsButton = new JRadioButton("Оператор Робертса", true);
+        JRadioButton sobelButton = new JRadioButton("Оператор Собеля");
+        typeGroup.add(robertsButton);
+        typeGroup.add(sobelButton);
+
+        JSlider thresholdSlider = new JSlider(0, 255, 50);
+        thresholdSlider.setMajorTickSpacing(50);
+        thresholdSlider.setPaintTicks(true);
+        thresholdSlider.setPaintLabels(true);
+        JLabel thresholdLabel = new JLabel("Порог: 50");
+
+        JTextField thresholdField = new JTextField("50");
+        thresholdField.setHorizontalAlignment(JTextField.CENTER);
+        thresholdField.setMaximumSize(new Dimension(100, 25));
+
+        thresholdSlider.addChangeListener(e -> {
+            int value = thresholdSlider.getValue();
+            thresholdLabel.setText("Порог: " + value);
+            thresholdField.setText(String.valueOf(value));
+        });
+
+        thresholdField.addActionListener(e -> {
+            try {
+                int value = Integer.parseInt(thresholdField.getText());
+                value = Math.max(0, Math.min(255, value)); // Ограничение 0-255
+                thresholdSlider.setValue(value);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(frame,
+                        "Введите целое число от 0 до 255",
+                        "Ошибка ввода",
+                        JOptionPane.ERROR_MESSAGE);
+                thresholdField.setText(String.valueOf(thresholdSlider.getValue()));
+            }
+        });
+
+        JButton applyButton = new JButton("Применить");
+        applyButton.addActionListener(e -> {
+            EdgeDetectionType type = robertsButton.isSelected() ?
+                    EdgeDetectionType.ROBERTS : EdgeDetectionType.SOBEL;
+
+            imagePanel.edgeDetectionConvert(type, thresholdSlider.getValue());
+            frame.dispose();
+        });
+
+        JButton cancelButton = new JButton("Отмена");
+        cancelButton.addActionListener(e -> {
+            System.out.println("Выбор отменён (кнопка Cancel)");
+            frame.dispose();
+        });
+
+        // Компоновка
+        frame.add(new JLabel("Выберите оператор:"));
+        frame.add(robertsButton);
+        frame.add(sobelButton);
+        frame.add(Box.createVerticalStrut(10));
+
+        frame.add(new JLabel("Порог бинаризации (0-255):"));
+        frame.add(thresholdSlider);
+        frame.add(thresholdLabel);
+
+        JPanel textFieldPanel = new JPanel();
+        textFieldPanel.add(new JLabel("Ручной ввод:"));
+        textFieldPanel.add(thresholdField);
+        frame.add(textFieldPanel);
+
+        frame.add(Box.createVerticalStrut(10));
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(cancelButton);
+        buttonPanel.add(applyButton);
+        frame.add(buttonPanel);
+
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+
+    public void openGausseForm() {
+        JFrame frame = new JFrame("Настройки Гауссова размытия");
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setSize(300, 250);
+        frame.setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS));
+
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                System.out.println("Выбор отменён (закрытие окна)");
+            }
+        });
+
+        ButtonGroup matrixGroup = new ButtonGroup();
+        JRadioButton matrix3x3 = new JRadioButton("Матрица 3×3", true);
+        JRadioButton matrix5x5 = new JRadioButton("Матрица 5×5");
+        JRadioButton matrix7x7 = new JRadioButton("Матрица 7×7");
+        JRadioButton matrix9x9 = new JRadioButton("Матрица 9×9");
+        JRadioButton matrix11x11 = new JRadioButton("Матрица 11×11");
+        matrixGroup.add(matrix3x3);
+        matrixGroup.add(matrix5x5);
+        matrixGroup.add(matrix7x7);
+        matrixGroup.add(matrix9x9);
+        matrixGroup.add(matrix11x11);
+
+        JButton applyButton = new JButton("Применить");
+        applyButton.addActionListener(e -> {
+            int size = 3;
+            if (matrix5x5.isSelected())
+                size = 5;
+            if (matrix7x7.isSelected())
+                size = 7;
+            if (matrix9x9.isSelected())
+                size = 9;
+            if (matrix11x11.isSelected())
+                size = 11;
+            JOptionPane.showMessageDialog(frame,
+                    "Выбрана матрица " + size + "×" + size,
+                    "Настройки применены",
+                    JOptionPane.INFORMATION_MESSAGE);
+
+            imagePanel.convertPixelByGausse(size);
+            frame.dispose();
+        });
+
+        JButton cancelButton = new JButton("Cancel");
+        cancelButton.addActionListener(e -> {
+            System.out.println("Выбор отменён (кнопка Cancel)");
+            frame.dispose();
+        });
+
+        frame.add(new JLabel("Выберите размер матрицы:"));
+        frame.add(matrix3x3);
+        frame.add(matrix5x5);
+        frame.add(matrix7x7);
+        frame.add(matrix9x9);
+        frame.add(matrix11x11);
+        frame.add(applyButton);
+        frame.add(cancelButton);
+
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+
+    public void openSharpForm() {
+        JFrame frame = new JFrame("Настройки резкости");
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setSize(300, 200);
+        frame.setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS));
+
+        // Группа для выбора размера матрицы
+        ButtonGroup matrixGroup = new ButtonGroup();
+        JRadioButton matrix3x3 = new JRadioButton("Матрица 3×3", true);
+        JRadioButton matrix5x5 = new JRadioButton("Матрица 5×5");
+        matrixGroup.add(matrix3x3);
+        matrixGroup.add(matrix5x5);
+
+        // Чекбокс для мягкого эффекта
+        JCheckBox softEffectCheckBox = new JCheckBox("Мягкий эффект");
+
+        // Кнопки действия
+        JButton applyButton = new JButton("Применить");
+        applyButton.addActionListener(e -> {
+            int size = matrix3x3.isSelected() ? 3 : 5;
+            boolean softEffect = softEffectCheckBox.isSelected();
+
+            if (size == 3) {
+                imagePanel.convertPixelBySharp3(softEffect);
+            } else {
+                imagePanel.convertPixelBySharp5(softEffect);
+            }
+            frame.dispose();
+        });
+
+        JButton cancelButton = new JButton("Отмена");
+        cancelButton.addActionListener(e -> frame.dispose());
+
+        // Добавляем компоненты
+        frame.add(new JLabel("Выберите размер матрицы:"));
+        frame.add(matrix3x3);
+        frame.add(matrix5x5);
+        frame.add(Box.createVerticalStrut(10)); // Отступ
+        frame.add(softEffectCheckBox);
+        frame.add(Box.createVerticalStrut(10)); // Отступ
+        frame.add(applyButton);
+        frame.add(cancelButton);
+
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
     }
 
     void addOpenSaveBtns() {
