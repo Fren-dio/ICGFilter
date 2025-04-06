@@ -14,7 +14,7 @@ import java.util.Objects;
 public class ToolBarMenu extends JToolBar {
 
     private FrameWork frameWork;
-    private final int btnSize = 40;
+    private final int btnSize = 50;
 
     private final ImagePanel imagePanel;
     private final SelectedSettings selectedSettings;
@@ -45,6 +45,8 @@ public class ToolBarMenu extends JToolBar {
         addEmbossBtn();
         addGammaBtn();
         addChoseBordersBtn();
+        addFloydSteinberg();
+        addFunnyColors();
 
         this.add(new JSeparator(SwingConstants.VERTICAL));
 
@@ -56,32 +58,36 @@ public class ToolBarMenu extends JToolBar {
 
         JLabel interpolLabel = new JLabel("Интерполяция: ", SwingConstants.CENTER);
         interpolLabel.setFont(new Font("Arial", Font.PLAIN, 12));
-        JToggleButton interButton = new JToggleButton("Билинейная");
-        interButton.setToolTipText("");
-        interButton.setSelected(false);
+        ManyVariantJButton interpolationBtn = new ManyVariantJButton();
+        interpolationBtn.setToolTipText("Выбор способа интерполяции для изменения размеров изображения при сохранении пропорций");
+        interpolationBtn.setSelected(false);
+        interpolationBtn.addActionListener(e -> {
+            imagePanel.setInterpolationMode((interpolationBtn.getState()+1)%3);
+            System.out.println("Изменено состояние кнопки. Метод интерполяции изменен: " + interpolationBtn.getInterpolationNameForLog() + "\n");
+        });
         row1.add(interpolLabel);
-        row1.add(interButton);
+        row1.add(interpolationBtn);
 
         JPanel row2 = new JPanel();
         row2.setLayout(new BoxLayout(row2, BoxLayout.X_AXIS));
 
         JLabel label = new JLabel("Работа с исходным изображением", SwingConstants.CENTER);
         label.setFont(new Font("Arial", Font.PLAIN, 12));
-        JToggleButton toggleButton = new JToggleButton("НЕТ");
+        JToggleButton toggleButton = new JToggleButton("ДА");
         toggleButton.setToolTipText("ДА - фильтры применяются к изначальному изображению\nНЕТ - фильтры применяются последовательно");
-        toggleButton.setSelected(false);
+        toggleButton.setSelected(true);
         row2.add(label);
         row2.add(toggleButton);
 
         toggleButton.addActionListener(e -> {
             if (toggleButton.isSelected()) {
                 System.out.println("Состояние: Последовательное применение фильтров");
-                toggleButton.setText("ДА");
-                imagePanel.setFilterMode(true);
-            } else {
-                System.out.println("Состояние: Работа с исходным изображением");
                 toggleButton.setText("НЕТ");
                 imagePanel.setFilterMode(false);
+            } else {
+                System.out.println("Состояние: Работа с исходным изображением");
+                toggleButton.setText("ДА");
+                imagePanel.setFilterMode(true);
             }
         });
         setsGrid.add(row1);
@@ -94,7 +100,9 @@ public class ToolBarMenu extends JToolBar {
     }
 
     void addBWToRGBBtn() {
-        JButton BWToRGBBtn = new JButton("RGB");
+        JButton BWToRGBBtn = new JButton("");
+        setDimensionBtn(BWToRGBBtn, new Dimension(btnSize, btnSize));
+        BWToRGBBtn.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/RGB_icon.jpg"))));
         BWToRGBBtn.setToolTipText("Look loaded image in rgb format");
         BWToRGBBtn.addActionListener(e -> convertImageFromBwToRGB());
         BWToRGBBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -102,7 +110,9 @@ public class ToolBarMenu extends JToolBar {
     }
 
     void addRGBToBWBtn() {
-        JButton RGBToBWBtn = new JButton("BW");
+        JButton RGBToBWBtn = new JButton("");
+        setDimensionBtn(RGBToBWBtn, new Dimension(btnSize, btnSize));
+        RGBToBWBtn.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/BW_icon.jpg"))));
         RGBToBWBtn.setToolTipText("Convert loaded image to black/white format");
         RGBToBWBtn.addActionListener(e -> convertImageFromRGBToBw());
         RGBToBWBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -110,7 +120,9 @@ public class ToolBarMenu extends JToolBar {
     }
 
     void addInverseBtn() {
-        JButton RGBToBWBtn = new JButton("Inverse");
+        JButton RGBToBWBtn = new JButton("");
+        setDimensionBtn(RGBToBWBtn, new Dimension(btnSize, btnSize));
+        RGBToBWBtn.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/Inverse_icon.jpg"))));
         RGBToBWBtn.setToolTipText("Convert loaded image to inverse format");
         RGBToBWBtn.addActionListener(e -> convertImageToInverse());
         RGBToBWBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -119,7 +131,9 @@ public class ToolBarMenu extends JToolBar {
 
 
     void addGausseBtn() {
-        JButton GausseBtn = new JButton("Gausse");
+        JButton GausseBtn = new JButton("");
+        setDimensionBtn(GausseBtn, new Dimension(btnSize, btnSize));
+        GausseBtn.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/Gausse_icon.jpg"))));
         GausseBtn.setToolTipText("Convert loaded image to gaussian blured format");
         GausseBtn.addActionListener(e -> openGausseForm());
         GausseBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -128,6 +142,7 @@ public class ToolBarMenu extends JToolBar {
 
     void addSharpBtn() {
         JButton GausseBtn = new JButton("Sharp");
+        setDimensionBtn(GausseBtn, new Dimension(btnSize, btnSize));
         GausseBtn.setToolTipText("Convert loaded image to more sharpness format");
         GausseBtn.addActionListener(e -> openSharpForm());
         GausseBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -135,7 +150,9 @@ public class ToolBarMenu extends JToolBar {
     }
 
     void addEmbossBtn() {
-        JButton btn = new JButton("Emboss");
+        JButton btn = new JButton("");
+        setDimensionBtn(btn, new Dimension(btnSize, btnSize));
+        btn.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/Embess_icon.jpg"))));
         btn.setToolTipText("Convert loaded image to emboss format");
         btn.addActionListener(e -> convertImageToEmboss());
         btn.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -144,6 +161,7 @@ public class ToolBarMenu extends JToolBar {
 
     void addGammaBtn() {
         JButton btn = new JButton("EdgeDetection");
+        setDimensionBtn(btn, new Dimension(btnSize, btnSize));
         btn.setToolTipText("Convert loaded image to edge detection format");
         btn.addActionListener(e -> openEdgeDetectionForm());
         btn.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -152,8 +170,28 @@ public class ToolBarMenu extends JToolBar {
 
     void addChoseBordersBtn() {
         JButton btn = new JButton("Gamma");
+        setDimensionBtn(btn, new Dimension(btnSize, btnSize));
         btn.setToolTipText("Convert loaded image to gamma corrected format");
         btn.addActionListener(e -> openGammaForm());
+        btn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        this.add(btn);
+    }
+
+    void addFloydSteinberg() {
+        JButton btn = new JButton("Floyd-Steinberg");
+        setDimensionBtn(btn, new Dimension(btnSize, btnSize));
+        btn.setToolTipText("Convert loaded image to \"Floyd-Steinberg format");
+        btn.addActionListener(e -> openFloydSteinbergForm());
+        btn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        this.add(btn);
+    }
+
+
+    void addFunnyColors() {
+        JButton btn = new JButton("Disering without error");
+        setDimensionBtn(btn, new Dimension(btnSize, btnSize));
+        btn.setToolTipText("Convert loaded image to Floyd-Steinberg format without error's distribute");
+        btn.addActionListener(e -> convertToFunnyColors());
         btn.setAlignmentX(Component.LEFT_ALIGNMENT);
         this.add(btn);
     }
@@ -169,6 +207,51 @@ public class ToolBarMenu extends JToolBar {
     }
     void convertImageToEmboss() {
         imagePanel.convertPixelToEmboss();
+    }
+    void convertToFunnyColors(){imagePanel.convertToFunnyColors();}
+
+    public void openFloydSteinbergForm() {
+        JFrame frame = new JFrame("Гамма-коррекция");
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setSize(400, 250); // Увеличили размер для удобства
+        frame.setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS));
+
+        JPanel paramPanel = new JPanel();
+        paramPanel.setLayout(new BoxLayout(paramPanel, BoxLayout.Y_AXIS));
+        paramPanel.setBorder(BorderFactory.createTitledBorder("Выберите параметр:"));
+
+        ButtonGroup paramGroup = new ButtonGroup();
+        JRadioButton param1Button = new JRadioButton("Дизеринг по всему цвету пикселя", true);
+        JRadioButton param2Button = new JRadioButton("Дизеринг по каждому компоненту отдельно (красному, синему и зеленому)");
+
+        paramGroup.add(param1Button);
+        paramGroup.add(param2Button);
+
+        paramPanel.add(param1Button);
+        paramPanel.add(param2Button);
+
+        JButton applyButton = new JButton("Применить");
+        applyButton.addActionListener(e -> {
+            boolean byFullPixel = param1Button.isSelected() ? true : false;
+            imagePanel.convertToFloydSteinberg(byFullPixel);
+            frame.dispose();
+        });
+
+        JButton cancelButton = new JButton("Cancel");
+        cancelButton.addActionListener(e -> {
+            System.out.println("Выбор отменён (кнопка Cancel)");
+            frame.dispose();
+        });
+
+        frame.add(paramPanel);
+        frame.add(Box.createVerticalStrut(10));
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(cancelButton);
+        buttonPanel.add(applyButton);
+        frame.add(buttonPanel);
+
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
     }
 
     public void openGammaForm() {
@@ -444,12 +527,16 @@ public class ToolBarMenu extends JToolBar {
     }
 
     void addOpenSaveBtns() {
-        JButton openBtn = new JButton("Open");
+        JButton openBtn = new JButton("");
+        setDimensionBtn(openBtn, new Dimension(45, 45));
+        openBtn.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/open_icon.jpg"))));
         openBtn.setToolTipText("Open image");
         openBtn.addActionListener(e -> openImage());
         this.add(openBtn);
 
-        JButton saveBtn = new JButton("Save");
+        JButton saveBtn = new JButton("");
+        setDimensionBtn(saveBtn, new Dimension(45, 45));
+        saveBtn.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/save_icon.jpg"))));
         saveBtn.setToolTipText("Save current image");
         saveBtn.addActionListener(e -> saveImage());
         this.add(saveBtn);
@@ -478,12 +565,16 @@ public class ToolBarMenu extends JToolBar {
     }
 
     void addResizeBtns() {
-        JButton toRealSizeBtn = new JButton("To real size");
+        JButton toRealSizeBtn = new JButton("");
+        setDimensionBtn(toRealSizeBtn, new Dimension(45, 45));
+        toRealSizeBtn.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/full_size.jpg"))));
         toRealSizeBtn.setToolTipText("Convert image to real size (pixel to pixel)");
         toRealSizeBtn.addActionListener(e -> resizeToRealSize());
         this.add(toRealSizeBtn);
 
-        JButton toWindowSizeBtn = new JButton("To screen size");
+        JButton toWindowSizeBtn = new JButton("");
+        setDimensionBtn(toWindowSizeBtn, new Dimension(45, 45));
+        toWindowSizeBtn.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/screen_size.jpg"))));
         toWindowSizeBtn.setToolTipText("Convert to current image size. Resize loaded image.");
         toWindowSizeBtn.addActionListener(e -> resizeToScreenSize());
         this.add(toWindowSizeBtn);
@@ -563,9 +654,11 @@ public class ToolBarMenu extends JToolBar {
     }
 
     void addOpenDefineImage() {
-        JButton defineImageBtn = new JButton("define");
+        JButton defineImageBtn = new JButton("");
+        setDimensionBtn(defineImageBtn, new Dimension(45, 45));
+        defineImageBtn.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource("/Define_icon.jpg"))));
         defineImageBtn.setToolTipText("Open define image to look example.");
-        setDimensionBtn(defineImageBtn, new Dimension(2*btnSize, btnSize-10));
+        setDimensionBtn(defineImageBtn, new Dimension(btnSize, btnSize));
 
         defineImageBtn.addActionListener(new ActionListener() {
             @Override
@@ -576,30 +669,6 @@ public class ToolBarMenu extends JToolBar {
         });
 
         this.add(defineImageBtn);
-    }
-
-
-    void addBtnChoseColor() {
-        JButton colorSelectBtn = new JButton(new ImageIcon(Objects.requireNonNull(getClass().getResource("/palitra_icon.jpg"))));
-        colorSelectBtn.setToolTipText("Select color, what you want.");
-        setDimensionBtn(colorSelectBtn, new Dimension(btnSize-10, btnSize-10));
-        colorSelectBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Открываем диалог выбора цвета
-                Color selectedColor = JColorChooser.showDialog(
-                        ToolBarMenu.this,
-                        "Choose a Color",
-                        colorSelectBtn.getBackground()
-                );
-
-                if (selectedColor != null) {
-                    colorSelectBtn.setBackground(selectedColor);
-                    selectedSettings.setCurrentColor(selectedColor);
-                }
-            }
-        });
-        this.add(colorSelectBtn);
     }
 
 
