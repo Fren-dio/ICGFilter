@@ -81,7 +81,6 @@ public class FrameWork extends JFrame {
 	private void showAboutDialog() {
 		String aboutMessage = "ICGFilter - графический редактор для обработки растровых изображений\n" +
 				"\n" +
-				"Версия: 1.0\n" +
 				"Автор: Кулишова Анастасия\n" +
 				"\n" +
 				"Функциональные возможности:\n" +
@@ -91,7 +90,7 @@ public class FrameWork extends JFrame {
 				"- Пространственные фильтры: размытие, повышение резкости, тиснение\n" +
 				"- Выделение границ (операторы Робертса и Собеля)\n" +
 				"- Алгоритмы дизеринга: Флойда-Стейнберга и упорядоченный\n" +
-				"- Дополнительные эффекты: акварелизация, поворот изображения\n" +
+				"- Дополнительные эффекты: акварелизация, поворот изображения, дизеринг без распространения ошибки, мозаика\n" +
 				"\n" +
 				"Минимальное разрешение экрана: 640×480\n";
 		JOptionPane.showMessageDialog(this, aboutMessage, "О программе", JOptionPane.INFORMATION_MESSAGE);
@@ -130,14 +129,18 @@ public class FrameWork extends JFrame {
 		fileMenu.addMenuItem("Exit", () -> System.exit(0));
 
 		MainMenuPanel filtersMenu = new MainMenuPanel("Filters");
-		filtersMenu.addMenuItem("Convert to BW", () -> {imagePanel.changeViewedImage("BW");});
-		filtersMenu.addMenuItem("Convert to RGB", () -> {imagePanel.changeViewedImage("RGB");});
-		filtersMenu.addMenuItem("Convert to inverse", () -> {imagePanel.changeViewedImage("INVERSE");});
-		filtersMenu.addMenuItem("Convert to gausse blur", () -> {toolBarMenu.openGausseForm();});
-		filtersMenu.addMenuItem("Convert to sharpness", () -> {toolBarMenu.openSharpForm();});
-		filtersMenu.addMenuItem("Convert to emboss", () -> {toolBarMenu.openSharpForm();});
-		filtersMenu.addMenuItem("Convert with gamma", () -> {toolBarMenu.openGammaForm();});
-		filtersMenu.addMenuItem("Convert by Roberts and Sobel", () -> {toolBarMenu.openEdgeDetectionForm();});
+		filtersMenu.addMenuItem("1. Convert to BW", () -> {imagePanel.changeViewedImage("BW");});
+		filtersMenu.addMenuItem("2. Convert to RGB", () -> {imagePanel.changeViewedImage("RGB");});
+		filtersMenu.addMenuItem("3. Convert to inverse", () -> {imagePanel.changeViewedImage("INVERSE");});
+		filtersMenu.addMenuItem("4. Convert to gausse blur", () -> {toolBarMenu.openGausseForm();});
+		filtersMenu.addMenuItem("5. Convert to sharpness", () -> {toolBarMenu.openSharpForm();});
+		filtersMenu.addMenuItem("6. Convert to emboss", () -> {toolBarMenu.openSharpForm();});
+		filtersMenu.addMenuItem("7. Convert with gamma", () -> {toolBarMenu.openGammaForm();});
+		filtersMenu.addMenuItem("8. Convert by Roberts and Sobel", () -> {toolBarMenu.openEdgeDetectionForm();});
+        filtersMenu.addMenuItem("9. Convert to Floyd-Steinberg", () -> {toolBarMenu.openFloydSteinbergForm();});
+        filtersMenu.addMenuItem("10. Convert to disering without error format", () -> {toolBarMenu.openConvertToFunnyColorsForm();});
+        filtersMenu.addMenuItem("11. Convert to ordered dithering format", () -> {toolBarMenu.openConvertToOrderedDitheringForm();});
+        filtersMenu.addMenuItem("12. Convert to acvarel format", () -> {toolBarMenu.convertToAcvarel();});
 
 		MainMenuPanel clearMenu = new MainMenuPanel("Clean");
 		clearMenu.addMenuItem("Clean", imagePanel::clear);
